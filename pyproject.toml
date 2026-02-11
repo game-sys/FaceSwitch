@@ -8,9 +8,26 @@ version = "0.1.0"
 description = "Simple multi-model face detection library"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "FaceSwitch Contributors" }]
+keywords = ["face-detection", "computer-vision", "hog", "dlib"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = []
+
+[project.urls]
+"Homepage" = "https://github.com/game-sys/FaceSwitch"
+"Bug Tracker" = "https://github.com/game-sys/FaceSwitch/issues"
+"Documentation" = "https://github.com/game-sys/FaceSwitch/blob/main/README.md"
 
 [project.optional-dependencies]
 hog = ["dlib>=19.24"]
@@ -30,6 +47,3 @@ addopts = "-q"
 
 [tool.setuptools.package-data]
 faceswitch = ["py.typed"]
-
-
-keywords = ["face-detection", "computer-vision", "hog", "dlib"]
