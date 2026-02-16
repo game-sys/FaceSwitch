@@ -212,7 +212,7 @@ __all__ = [
     "YoloDetectorConfig",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 ```
 
 ### Phase 3: Dependencies
