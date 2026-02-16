@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "faceswitch"
-version = "0.2.0"
+version = "0.2.1"
 description = "Simple multi-model face detection library"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Image Recognition",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["dlib>=19.24"]
+dependencies = []
 
 [project.urls]
 "Homepage" = "https://github.com/game-sys/FaceSwitch"
@@ -30,9 +30,16 @@ dependencies = ["dlib>=19.24"]
 "Documentation" = "https://github.com/game-sys/FaceSwitch/blob/main/README.md"
 
 [project.optional-dependencies]
-hog = ["dlib>=19.24", "ultralytics>=8.0.0"]
+hog = ["dlib>=19.24"]
+yolo = ["ultralytics>=8.0.0", "torch>=2.0.0"]
 examples = ["opencv-python>=4.8"]
 dev = ["pytest>=8.0"]
+all = [
+    "dlib>=19.24",
+    "ultralytics>=8.0.0",
+    "torch>=2.0.0",
+    "opencv-python>=4.8"
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
