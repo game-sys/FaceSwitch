@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Image Recognition",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = []
+dependencies = ["dlib>=19.24"]
 
 [project.urls]
 "Homepage" = "https://github.com/game-sys/FaceSwitch"
