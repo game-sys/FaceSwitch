@@ -24,3 +24,6 @@ htmlcov/
 .DS_Store
 .vscode/
 .idea/
+
+# Conda environment file
+environment.yml
