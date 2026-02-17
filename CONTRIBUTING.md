@@ -48,14 +48,22 @@ We are committed to providing a welcoming and inclusive experience for everyone.
    ```
 
 2. **Create a virtual environment**
+
+   **Option A: Using venv**
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
+   **Option B: Using Conda**
+   ```bash
+   conda create -n faceswitch python=3.10
+   conda activate faceswitch
+   ```
+
 3. **Install in development mode**
    ```bash
-   pip install -e '.[dev,hog,examples]'
+   pip install -e '.[all,dev]'
    ```
 
 4. **Run tests to verify setup**
@@ -227,6 +235,12 @@ hog = ["dlib>=19.24"]
 yolo = ["ultralytics>=8.0.0", "torch>=2.0.0"]
 examples = ["opencv-python>=4.8"]
 dev = ["pytest>=8.0"]
+all = [
+    "dlib>=19.24",
+    "ultralytics>=8.0.0",
+    "torch>=2.0.0",
+    "opencv-python>=4.8"
+]
 ```
 
 ### Phase 4: Testing
@@ -358,7 +372,57 @@ if __name__ == "__main__":
     main()
 ```
 
-#### Step 10: Update README
+#### Step 10: Handle Model Weights (For Detectors with Remote Models)
+
+If your detector downloads model weights from remote sources (like YOLO, RetinaFace, etc.), implement weight handling similar to `YoloDetector`:
+
+**Key Requirements:**
+
+1. **Define Model URLs** - In your detector class, maintain a dictionary of supported model variants:
+   ```python
+   _MODEL_URLS: dict[str, str] = {
+       "yolov8n-face.pt": "https://github.com/YapaLab/yolo-face/releases/download/1.0.0/yolov8n-face.pt",
+       "yolov8s-face.pt": "https://github.com/YapaLab/yolo-face/releases/download/1.0.0/yolov8s-face.pt",
+   }
+   ```
+
+2. **Cache Weights Locally** - Store downloaded weights in user's home directory:
+   ```python
+   target_dir = Path.home() / ".faceswitch" / "weights" / "yolo"
+   target_dir.mkdir(parents=True, exist_ok=True)
+   ```
+
+3. **Avoid Re-downloading** - Check if weights exist before downloading:
+   ```python
+   model_path = target_dir / model_name
+   if model_path.exists() and model_path.stat().st_size > 0:
+       return model_path  # Use cached weights
+   ```
+
+4. **Handle Download Errors Gracefully** - Use temporary files during download:
+   ```python
+   tmp_path = model_path.with_suffix(model_path.suffix + ".part")
+   try:
+       urlretrieve(url, tmp_path)
+       os.replace(tmp_path, model_path)
+   finally:
+       if tmp_path.exists():
+           tmp_path.unlink(missing_ok=True)
+   ```
+
+5. **Add Configuration** - Allow users to specify model variant and device:
+   ```python
+   @dataclass(frozen=True)
+   class YourDetectorConfig:
+       model: str = "default-model.pt"  # Model name or path
+       device: str = "cpu"              # "cpu", "cuda", "mps"
+       confidence_threshold: float = 0.25
+   ```
+
+6. **Document Cache Location** - In README and docstrings:
+   > Model weights are automatically downloaded and cached in `~/.faceswitch/weights/yolo/` on first use.
+
+#### Step 11: Update README
 
 Add a section to `README.md` documenting your detector:
 
@@ -517,6 +581,112 @@ def detect(self, image: NDArray[np.uint8]) -> list[FaceBox]:
 - `docs: Update installation instructions`
 - `test: Add tests for MTCNN detector`
 - `refactor: Improve detector base class`
+
+### Branch Naming Conventions
+
+Use these prefixes for branch names to keep the repository organized:
+
+| Prefix | Purpose | Example |
+|--------|---------|---------|
+| `feature/` | New detector or feature | `feature/mtcnn-detector` |
+| `fix/` | Bug fixes | `fix/hog-grayscale-conversion` |
+| `docs/` | Documentation updates | `docs/installation-guide` |
+| `test/` | Test additions or improvements | `test/yolo-edge-cases` |
+| `refactor/` | Code refactoring without behavior changes | `refactor/detector-base-structure` |
+| `perf/` | Performance improvements | `perf/optimize-detection-speed` |
+| `chore/` | Maintenance tasks, dependencies | `chore/update-dependencies` |
+
+**Guidelines:**
+- Use lowercase letters and hyphens (no underscores or spaces)
+- Be descriptive but concise
+- Use present tense: `feature/add-detector` not `feature/added-detector`
+- Branch name should match the PR title scope
+
+Example workflow:
+```bash
+# Feature branch
+git checkout -b feature/add-retina-face-detector
+
+# Fix branch
+git checkout -b fix/improve-image-validation
+
+# Documentation branch
+git checkout -b docs/add-yolo-usage-example
+```
+
+### Commit Message Conventions
+
+Follow the **Conventional Commits** format for clear, consistent commit history:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Format breakdown:**
+
+| Component | Description | Example |
+|-----------|-------------|---------|
+| `type` | Category of change | `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore` |
+| `scope` | Module/component affected (optional) | `hog-detector`, `yolo-config`, `public-api` |
+| `subject` | Concise description (max 50 chars) | `Add MTCNN detector` |
+| `body` | Detailed explanation (optional) | Motivation, implementation details |
+| `footer` | Breaking changes or issue references (optional) | `Fixes #123`, `BREAKING CHANGE: ...` |
+
+**Type definitions:**
+
+- `feat`: New feature or detector
+- `fix`: Bug fix
+- `docs`: Documentation changes (README, CONTRIBUTING, etc.)
+- `test`: Add or update tests
+- `refactor`: Code refactoring without behavior changes
+- `perf`: Performance improvements
+- `chore`: Maintenance, dependency updates, build changes
+
+**Examples:**
+
+```bash
+# Simple feature
+git commit -m "feat: Add MTCNN detector"
+
+# Feature with scope
+git commit -m "feat(detectors): Add RetinaFace detector implementation"
+
+# Bug fix
+git commit -m "fix(hog): Fix grayscale conversion in edge cases"
+
+# Documentation 
+git commit -m "docs: Add weight handling instructions for contributors"
+
+# Test addition
+git commit -m "test(yolo): Add edge case tests for confidence filtering"
+
+# With detailed body
+git commit -m "feat(yolo): Add device selection for GPU support
+
+- Allow users to specify device (cpu/cuda/mps)
+- Add device configuration to YoloDetectorConfig
+- Update README with device usage examples
+
+Fixes #45"
+
+# With breaking change
+git commit -m "refactor!: Reorganize detector package structure
+
+BREAKING CHANGE: DetectorConfig now requires model_path parameter"
+```
+
+**Guidelines:**
+
+- ✅ Use imperative mood: "Add feature" not "Added feature" or "Adds feature"
+- ✅ Keep subject line under 50 characters
+- ✅ Start with lowercase after type/scope
+- ✅ Use body to explain **why**, not just **what**
+- ✅ Reference issues: `Fixes #123` or `Related to #456`
+- ✅ Use `!` after type for breaking changes: `feat!:`
 
 ### PR Description Template
 
