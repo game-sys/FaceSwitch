@@ -32,3 +32,7 @@ def test_hog_detector_detects_lenna_face() -> None:
     faces = detector.detect(image)
 
     assert len(faces) >= 1
+    # Validate xyxy contract
+    for face in faces:
+        assert face.x2 > face.x1, f"Invalid bbox: x2={face.x2} should be > x1={face.x1}"
+        assert face.y2 > face.y1, f"Invalid bbox: y2={face.y2} should be > y1={face.y1}"
