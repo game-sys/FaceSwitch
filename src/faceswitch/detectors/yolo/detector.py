@@ -18,8 +18,8 @@ class YoloDetector(FaceDetector):
     # Put the real URL(s) you want to support
     _MODEL_URLS: dict[str, str] = {
         "yolov8n-face.pt": "https://github.com/YapaLab/yolo-face/releases/download/1.0.0/yolov8n-face.pt",
-        # "yolov11n-face.pt": "...",
-        # "yolov12n-face.pt": "...",
+        "yolov8m-face.pt": "https://github.com/YapaLab/yolo-face/releases/download/1.0.0/yolov8m-face.pt",
+        "yolov8l-face.pt": "https://github.com/YapaLab/yolo-face/releases/download/1.0.0/yolov8l-face.pt",
     }
 
     def __init__(self, config: YoloDetectorConfig | None = None) -> None:
