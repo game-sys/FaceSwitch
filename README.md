@@ -44,8 +44,6 @@ pip install faceswitch
 | YOLO | Deep learning detector (more accurate, works best with GPU) | `pip install "faceswitch[yolo]"` |
 | RetinaFace | High-accuracy ResNet detector (best for difficult angles and small faces) | `pip install "faceswitch[retinaface]"` |
 
-| RetinaFace | Deep learning face detector using ResNet+FPN with multi-scale anchors for high-accuracy detection. | `pip install "faceswitch[retinaface]"` |
-
 **Or install everything at once:**
 
 ```bash
@@ -174,4 +172,4 @@ Yes, as long as the image is a NumPy array with shape `(height, width, 3)` and `
 
 FaceSwitch is actively maintained. New detectors are added regularly — run `pip install --upgrade faceswitch` to get the latest.
 
-Current version: **0.2.2** | [GitHub](https://github.com/game-sys/FaceSwitch) | [PyPI](https://pypi.org/project/faceswitch/)
+Current version: **0.3.2** | [GitHub](https://github.com/game-sys/FaceSwitch) | [PyPI](https://pypi.org/project/faceswitch/)

@@ -13,7 +13,7 @@ try:
 except ImportError:
     pass
 
-__version__ = "0.2.2"
+__version__ = "0.3.2"
 
 try:
     from faceswitch.detectors.retinaface import RetinaFaceDetector, RetinaFaceDetectorConfig  # noqa: F401
