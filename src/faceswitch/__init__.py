@@ -13,4 +13,11 @@ try:
 except ImportError:
     pass
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
+
+try:
+    from faceswitch.detectors.retinaface import RetinaFaceDetector, RetinaFaceDetectorConfig  # noqa: F401
+
+    __all__ += ["RetinaFaceDetector", "RetinaFaceDetectorConfig"]
+except ImportError:
+    pass

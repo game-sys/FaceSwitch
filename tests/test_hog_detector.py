@@ -1,38 +1,97 @@
+from __future__ import annotations
+
 import importlib.util
+import time
 from pathlib import Path
 
 import pytest
 
-from faceswitch import HogDetector
+LENNA = Path(__file__).parent / "assets" / "Lenna_test_image.png"
+IMAGE_W, IMAGE_H = 512, 512
+RUNS_FOR_SPEED = 10
+MAX_SECONDS_PER_RUN = 3.0  # HOG on CPU is slower than YOLO
 
 
-def test_hog_detector_optional_dependency_behavior() -> None:
+# ---------------------------------------------------------------------------
+# Test 1 — dependency guard (no library needed)
+# ---------------------------------------------------------------------------
+
+def test_hog_optional_dependency() -> None:
     has_dlib = importlib.util.find_spec("dlib") is not None
-
-    if has_dlib:
-        detector = HogDetector()
-        assert detector is not None
-    else:
-        try:
+    if not has_dlib:
+        from faceswitch.detectors.hog.detector import HogDetector
+        with pytest.raises(ImportError) as exc:
             HogDetector()
-            assert False, "Expected ImportError when dlib is missing"
-        except ImportError as exc:
-            assert "faceswitch[hog]" in str(exc)
+        assert "faceswitch[hog]" in str(exc.value)
 
 
-def test_hog_detector_detects_lenna_face() -> None:
+# ---------------------------------------------------------------------------
+# Test 2 — detection correctness on Lenna
+# ---------------------------------------------------------------------------
+
+def test_hog_detects_lenna_face() -> None:
     pytest.importorskip("dlib")
     cv2 = pytest.importorskip("cv2")
 
-    image_path = Path(__file__).parent / "assets" / "Lenna_test_image.png"
-    image = cv2.imread(str(image_path))
-    assert image is not None, f"Could not read test image: {image_path}"
+    from faceswitch import HogDetector
+
+    image = cv2.imread(str(LENNA))
+    assert image is not None, f"Could not read test image: {LENNA}"
 
     detector = HogDetector()
     faces = detector.detect(image)
 
-    assert len(faces) >= 1
-    # Validate xyxy contract
-    for face in faces:
-        assert face.x2 > face.x1, f"Invalid bbox: x2={face.x2} should be > x1={face.x1}"
-        assert face.y2 > face.y1, f"Invalid bbox: y2={face.y2} should be > y1={face.y1}"
+    assert isinstance(faces, list), "detect() must return a list"
+    assert len(faces) >= 1, f"Expected at least 1 face on Lenna, got {len(faces)}"
+
+    for f in faces:
+        # valid xyxy order
+        assert f.x2 > f.x1, f"Invalid bbox: x2={f.x2} <= x1={f.x1}"
+        assert f.y2 > f.y1, f"Invalid bbox: y2={f.y2} <= y1={f.y1}"
+        # box stays within image bounds
+        assert f.x1 >= 0, f"x1={f.x1} is outside image"
+        assert f.y1 >= 0, f"y1={f.y1} is outside image"
+        assert f.x2 <= IMAGE_W, f"x2={f.x2} exceeds image width {IMAGE_W}"
+        assert f.y2 <= IMAGE_H, f"y2={f.y2} exceeds image height {IMAGE_H}"
+        # confidence must be a valid probability if present
+        if f.confidence is not None:
+            assert 0.0 <= f.confidence <= 1.0, f"confidence={f.confidence} out of [0,1]"
+        # box must cover a meaningful area (at least 10x10 px)
+        assert (f.x2 - f.x1) >= 10, f"Box too narrow: {f.x2 - f.x1}px"
+        assert (f.y2 - f.y1) >= 10, f"Box too short: {f.y2 - f.y1}px"
+
+
+# ---------------------------------------------------------------------------
+# Test 3 — performance and speed
+# ---------------------------------------------------------------------------
+
+def test_hog_speed_on_lenna() -> None:
+    pytest.importorskip("dlib")
+    cv2 = pytest.importorskip("cv2")
+
+    from faceswitch import HogDetector
+
+    image = cv2.imread(str(LENNA))
+    assert image is not None
+
+    detector = HogDetector()
+
+    # warm-up run (not counted)
+    detector.detect(image)
+
+    times = []
+    for _ in range(RUNS_FOR_SPEED):
+        t0 = time.perf_counter()
+        faces = detector.detect(image)
+        times.append(time.perf_counter() - t0)
+
+    avg = sum(times) / len(times)
+    worst = max(times)
+
+    assert worst <= MAX_SECONDS_PER_RUN, (
+        f"Slowest run {worst:.3f}s exceeded limit of {MAX_SECONDS_PER_RUN}s"
+    )
+    print(
+        f"\nHOG speed over {RUNS_FOR_SPEED} runs: "
+        f"avg={avg*1000:.1f}ms  worst={worst*1000:.1f}ms"
+    )

@@ -10,3 +10,10 @@ try:
     __all__ += ["YoloDetector", "YoloDetectorConfig"]
 except ImportError:
     pass
+
+try:
+    from faceswitch.detectors.retinaface import RetinaFaceDetector, RetinaFaceDetectorConfig  # noqa: F401
+
+    __all__ += ["RetinaFaceDetector", "RetinaFaceDetectorConfig"]
+except ImportError:
+    pass
